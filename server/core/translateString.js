@@ -60,4 +60,3 @@ async function translateString({ text, provider, sourceLang, targetLang, cache, 
 }
 
 module.exports = { translateString };
-  
