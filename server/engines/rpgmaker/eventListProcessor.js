@@ -79,4 +79,3 @@ async function processEventListWithMerging(eventList, { translateOne, maxCharsPe
 }
 
 module.exports = { processEventListWithMerging };
-        
