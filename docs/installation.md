@@ -22,17 +22,7 @@
    npm install
    ```
 
-3. **Siapkan config** (opsional, tapi disarankan supaya tidak perlu isi API key berulang kali):
-
-   ```bash
-   cp config.example.js config.js
-   ```
-
-   Buka `config.js`, isi `apiKey` untuk provider yang mau dipakai sebagai default. File `config.js` sudah masuk `.gitignore`, jadi aman dari ke-commit tidak sengaja.
-
-   Kalau langkah ini dilewati, aplikasi tetap jalan — kamu cuma perlu isi API key manual lewat form di web setiap kali dipakai.
-
-4. **Taruh project game** yang mau diterjemahkan ke dalam folder `games/`. Contoh struktur:
+3. **Taruh project game** yang mau diterjemahkan ke dalam folder `games/`. Contoh struktur:
 
    ```
    simple-game-translator/
@@ -48,25 +38,43 @@
 
    Folder `games/NamaGameku` harus berisi folder `data/` (atau `www/data/`) khas RPG Maker MV/MZ. Boleh taruh beberapa project game sekaligus, masing-masing di subfolder sendiri.
 
-5. **Jalankan server**:
+4. **Jalankan server**:
 
    ```bash
    npm start
    ```
 
-6. Buka `http://localhost:4173` di browser. Folder yang tadi ditaruh di `games/` akan muncul otomatis di dropdown.
+5. Buka `http://localhost:4173` di browser.
 
-## Alur pemakaian singkat
+## Alur pemakaian
+
+### 1. Dashboard — atur provider dan API key
+
+Menu pertama yang perlu diisi. Pilih provider terjemahan, isi API key (kalau providernya butuh), lalu klik **Tes koneksi** untuk memastikan key valid. Semua pengaturan ini tersimpan otomatis di localStorage browser — tidak perlu diisi ulang tiap buka aplikasi, tapi juga berarti tidak ikut pindah kalau kamu ganti browser atau device.
+
+Untuk DeepL, tombol **Cek kuota** mengambil data karakter terpakai dan limit bulanan langsung dari akun kamu. Untuk OpenAI-compatible, jumlah token yang dipakai selama sesi translate terakumulasi otomatis di bagian "Pemakaian sesi ini" — angka ini reset tiap reload halaman karena tidak disimpan permanen.
+
+### 2. Translate — jalankan penerjemahan
 
 1. Pilih folder game dari dropdown, klik **Baca folder**.
-2. Pilih provider terjemahan. Kalau `config.js` sudah diisi, API key otomatis terisi.
-3. Klik **Tes koneksi** untuk memastikan API key valid sebelum menjalankan proses penuh.
-4. Klik **Mulai terjemahkan**. Progress muncul real-time di panel log sebelah kanan.
-5. Hasil tersimpan di `games/NamaGameku_indo/`, sejajar dengan folder aslinya. Folder asli tidak diubah sama sekali.
+2. Pastikan provider yang aktif (ditampilkan di panel) sudah sesuai dengan yang diatur di Dashboard.
+3. Klik **Mulai terjemahkan**. Progress per file dan per baris teks muncul real-time di panel log.
+4. Hasil tersimpan di `games/NamaGameku_indo/`, sejajar dengan folder aslinya. Folder asli tidak diubah sama sekali.
+
+### 3. Manual Revisi — perbaiki hasil yang kaku
+
+Mesin terjemahan otomatis (apalagi yang gratis) sering menghasilkan teks yang terlalu baku atau salah konteks untuk dialog game — semisal "MP" (Magic Point) yang malah diterjemahkan jadi "anggota parlemen". Menu ini untuk memperbaikinya tanpa perlu buka file JSON manual:
+
+1. Pilih folder hasil terjemahan (yang berakhiran `_indo`) dari dropdown.
+2. Pilih file yang mau direvisi.
+3. Setiap baris teks tampil sebagai kotak yang bisa diedit langsung. Baris yang sudah diubah ditandai otomatis.
+4. Klik **Simpan perubahan** untuk menulis balik ke file JSON aslinya.
+
+Tidak ada fitur undo di dalam aplikasi — kalau mau aman untuk revisi besar-besaran, backup dulu folder `_indo/` sebelum mulai.
 
 ## Menerapkan hasil terjemahan ke game
 
-Setelah proses selesai, folder `NamaGameku_indo/` berisi **hanya file yang diterjemahkan** (`data/*.json`, dan `js/plugins.js` kalau ada) — bukan seluruh game. Untuk menerapkannya:
+Setelah proses selesai (baik dari menu Translate maupun setelah direvisi manual), folder `NamaGameku_indo/` berisi **hanya file yang diterjemahkan** (`data/*.json`, dan `js/plugins.js` kalau ada) — bukan seluruh game. Untuk menerapkannya:
 
 1. **Backup dulu** folder game asli sebelum menimpa apa pun — kalau ada yang salah, kamu masih punya versi asli.
 2. Buka folder `NamaGameku_indo/`. Perhatikan strukturnya persis mengikuti posisi asli file tersebut di game — kalau game aslinya punya `www/data/`, hasil terjemahan juga akan ada di `NamaGameku_indo/www/data/`, bukan cuma `NamaGameku_indo/data/`.
@@ -78,9 +86,9 @@ Setelah proses selesai, folder `NamaGameku_indo/` berisi **hanya file yang diter
 
 Beberapa game RPG Maker MV/MZ punya folder `data/` ganda: satu di root project, satu lagi di `www/data/`. Ini biasa terjadi karena sisa proses deploy/build. Simple Game Translator akan mendeteksi dan menerjemahkan **kedua-duanya** kalau memang ada — jadi kamu tidak perlu menebak folder mana yang benar-benar dipakai game; tinggal timpa semua yang ada di `NamaGameku_indo/` ke game asli.
 
+## Mengganti port
 
-
-Ubah nilai `port` di `config.js`, atau jalankan dengan environment variable:
+Jalankan dengan environment variable:
 
 ```bash
 PORT=5000 npm start
@@ -88,8 +96,12 @@ PORT=5000 npm start
 
 ## Troubleshooting
 
-**Dropdown folder kosong** — pastikan project game benar-benar ada di dalam `games/`, bukan di folder lain, dan berisi subfolder `data/`.
+**Dropdown folder kosong di menu Translate** — pastikan project game benar-benar ada di dalam `games/`, bukan di folder lain, dan berisi subfolder `data/`.
+
+**Dropdown folder kosong di menu Manual Revisi** — folder yang muncul di sini hanya yang sudah pernah diterjemahkan (nama folder mengandung `_indo`). Jalankan translate dulu dari menu Translate.
 
 **"Tidak ada engine yang cocok dengan folder ini"** — saat ini hanya RPG Maker MV/MZ yang didukung (folder harus punya `data/*.json`). Engine lain akan menyusul.
 
-**DeepL menolak koneksi** — periksa apakah API key memakai akun Free (`:fx` di akhir key) atau Pro; keduanya didukung otomatis, tapi pastikan key belum kedaluwarsa atau kuota habis di dashboard DeepL.
+**DeepL menolak koneksi** — periksa apakah API key memakai akun Free (`:fx` di akhir key) atau Pro; keduanya didukung otomatis, tapi pastikan key belum kedaluwarsa atau kuota habis (cek lewat tombol **Cek kuota** di Dashboard).
+
+**API key hilang setelah ganti browser/device** — ini memang perilaku yang disengaja. API key disimpan di localStorage browser, bukan di file config, supaya tidak ada risiko ke-commit ke git tanpa sengaja. Isi ulang lewat Dashboard.
