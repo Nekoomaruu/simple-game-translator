@@ -15,7 +15,7 @@ npm run dev
 
 ```
 server/
-  core/           orkestrasi lintas-engine: cache, job runner, config, scoping folder games/
+  core/           orkestrasi lintas-engine: cache, job runner, scoping folder games/, editor revisi
   engines/        logika khusus per game engine
     registry.js   daftar semua engine yang aktif
     rpgmaker/     implementasi untuk RPG Maker MV/MZ
@@ -89,4 +89,3 @@ Karena proyek ini belum memiliki test suite otomatis, sebelum membuka pull reque
 - Satu pull request untuk satu perubahan yang jelas cakupannya (satu engine baru, satu bugfix, dll).
 - Jelaskan di deskripsi PR: apa yang berubah, kenapa, dan bagaimana cara mengujinya.
 - Kalau menambah engine atau provider baru, sertakan juga pembaruan di `README.md` dan `docs/installation.md` bila relevan.
-- 
