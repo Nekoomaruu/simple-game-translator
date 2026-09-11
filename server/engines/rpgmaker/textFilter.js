@@ -94,4 +94,3 @@ function isTranslatableField(key, value) {
 }
 
 module.exports = { isTranslatableField, hasTranslatableCharacters };
-  
