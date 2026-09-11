@@ -31,22 +31,30 @@ class TranslationJob extends EventEmitter {
 
     let processed = 0;
     let failed = 0;
+    let totalTokensUsed = 0;
 
     const translateOne = async (text) => {
       if (this.cancelled) return text;
-      return translateString({
+      const result = await translateString({
         text,
         provider: this.provider,
         sourceLang: this.sourceLang,
         targetLang: this.targetLang,
         cache: this.cache,
         relayThroughEnglish: this.relayThroughEnglish,
-        onLog: (source, result, error) => {
+        onLog: (source, translated, error) => {
           this.translatedCount += 1;
           if (this.translatedCount % CACHE_SAVE_INTERVAL === 0) this.cache.save();
-          this.emit('line', { source, result, error: error ? error.message : null });
+
+          if (this.provider.lastUsage) {
+            totalTokensUsed += this.provider.lastUsage.total_tokens || 0;
+            this.provider.lastUsage = null;
+          }
+
+          this.emit('line', { source, result: translated, error: error ? error.message : null });
         }
       });
+      return result;
     };
 
     for (const file of files) {
@@ -76,10 +84,10 @@ class TranslationJob extends EventEmitter {
       processed,
       failed,
       cancelled: this.cancelled,
-      outputRoot: this.outputRoot
+      outputRoot: this.outputRoot,
+      totalTokensUsed
     });
   }
 }
 
 module.exports = { TranslationJob };
-          
