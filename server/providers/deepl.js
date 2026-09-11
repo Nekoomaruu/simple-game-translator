@@ -33,8 +33,27 @@ class DeepLProvider extends TranslationProvider {
   }
 
   async verify() {
-    await this.translate('test', 'EN', 'ID');
+    await this.checkUsage();
     return true;
+  }
+
+  async checkUsage() {
+    const host = hostForKey(this.config.apiKey);
+    const response = await fetch(`${host}/v2/usage`, {
+      headers: { Authorization: `DeepL-Auth-Key ${this.config.apiKey}` }
+    });
+
+    if (!response.ok) {
+      const body = await response.text();
+      throw new Error(`DeepL usage check failed (${response.status}): ${body}`);
+    }
+
+    const payload = await response.json();
+    return {
+      kind: 'characters',
+      used: payload.character_count,
+      limit: payload.character_limit
+    };
   }
 }
 
