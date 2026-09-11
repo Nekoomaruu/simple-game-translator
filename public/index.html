@@ -13,7 +13,7 @@
     <span class="topbar-mark-glyph">&gt;_</span>
     <span class="topbar-mark-text">simple game translator</span>
   </div>
-  <div class="topbar-status" id="serverStatus">lokal &middot; localhost</div>
+  <div class="topbar-status" id="serverStatus">letakkan project di folder games/</div>
 </header>
 
 <main class="layout">
@@ -21,8 +21,8 @@
   <section class="panel panel-config" aria-label="Konfigurasi">
 
     <div class="field-group">
-      <label class="field-label" for="folderPath">Folder project game</label>
-      <input type="text" id="folderPath" class="field-input" placeholder="/home/user/game/data atau folder induknya">
+      <label class="field-label" for="folderSelect">Folder game (di dalam games/)</label>
+      <select id="folderSelect" class="field-input"></select>
       <button class="btn btn-secondary" id="inspectBtn" type="button">Baca folder</button>
       <p class="field-hint" id="inspectResult"></p>
     </div>
@@ -95,4 +95,3 @@
 <script src="/js/app.js"></script>
 </body>
 </html>
-  
