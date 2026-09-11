@@ -8,90 +8,215 @@
 </head>
 <body>
 
-<header class="topbar">
-  <div class="topbar-mark">
-    <span class="topbar-mark-glyph">&gt;_</span>
-    <span class="topbar-mark-text">simple game translator</span>
-  </div>
-  <div class="topbar-status" id="serverStatus">letakkan project di folder games/</div>
-</header>
+<div class="shell">
 
-<main class="layout">
-
-  <section class="panel panel-config" aria-label="Konfigurasi">
-
-    <div class="field-group">
-      <label class="field-label" for="folderSelect">Folder game (di dalam games/)</label>
-      <select id="folderSelect" class="field-input"></select>
-      <button class="btn btn-secondary" id="inspectBtn" type="button">Baca folder</button>
-      <p class="field-hint" id="inspectResult"></p>
+  <nav class="sidebar" aria-label="Navigasi utama">
+    <div class="sidebar-mark">
+      <span class="sidebar-mark-glyph">&gt;_</span>
+      <span class="sidebar-mark-text">simple game<br>translator</span>
     </div>
 
-    <div class="field-group">
-      <span class="field-label">Engine terdeteksi</span>
-      <div class="pill" id="engineLabel">&mdash;</div>
+    <div class="sidebar-nav">
+      <button class="nav-item" data-view="dashboard" type="button">
+        <span class="nav-item-glyph">&#9635;</span>
+        <span>Dashboard</span>
+      </button>
+      <button class="nav-item" data-view="translate" type="button">
+        <span class="nav-item-glyph">&#8644;</span>
+        <span>Translate</span>
+      </button>
+      <button class="nav-item" data-view="revision" type="button">
+        <span class="nav-item-glyph">&#9998;</span>
+        <span>Manual Revisi</span>
+      </button>
     </div>
 
-    <div class="field-row">
-      <div class="field-group">
-        <label class="field-label" for="sourceLang">Bahasa sumber</label>
-        <select id="sourceLang" class="field-input">
-          <option value="EN">Inggris</option>
-          <option value="JA">Jepang (estafet via Inggris)</option>
-        </select>
+    <div class="sidebar-foot">
+      <div class="sidebar-foot-line" id="activeProviderLabel">provider: &mdash;</div>
+      <div class="sidebar-foot-line sidebar-foot-dim">games/ &middot; lokal</div>
+    </div>
+  </nav>
+
+  <main class="content">
+
+    <!-- ============ DASHBOARD ============ -->
+    <section class="view" id="view-dashboard" data-view-panel="dashboard">
+      <header class="view-header">
+        <h1 class="view-title">Dashboard</h1>
+        <p class="view-subtitle">Pengaturan provider terjemahan dan default. Disimpan di browser ini saja.</p>
+      </header>
+
+      <div class="view-body dashboard-grid">
+
+        <div class="card">
+          <h2 class="card-title">Provider aktif</h2>
+
+          <div class="field-group">
+            <label class="field-label" for="providerSelect">Penyedia terjemahan</label>
+            <select id="providerSelect" class="field-input"></select>
+          </div>
+
+          <div class="field-group" id="apiKeyGroup">
+            <label class="field-label" for="apiKey">API key</label>
+            <input type="password" id="apiKey" class="field-input" placeholder="Kunci API kamu sendiri" autocomplete="off">
+          </div>
+
+          <div class="field-group" id="baseUrlGroup" hidden>
+            <label class="field-label" for="baseUrl">Base URL</label>
+            <input type="text" id="baseUrl" class="field-input" placeholder="https://api.openai.com/v1" autocomplete="off">
+          </div>
+
+          <div class="field-group" id="modelGroup" hidden>
+            <label class="field-label" for="modelName">Model</label>
+            <input type="text" id="modelName" class="field-input" placeholder="gpt-4o-mini" autocomplete="off">
+          </div>
+
+          <div class="field-actions">
+            <button class="btn btn-ghost" id="verifyBtn" type="button">Tes koneksi</button>
+            <button class="btn btn-ghost" id="checkUsageBtn" type="button">Cek kuota</button>
+            <span class="verify-result" id="verifyResult"></span>
+          </div>
+
+          <p class="field-hint">Tersimpan otomatis di browser ini (localStorage) — tidak dikirim ke mana pun selain langsung ke provider yang kamu pilih.</p>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title">Default translate</h2>
+
+          <div class="field-row">
+            <div class="field-group">
+              <label class="field-label" for="sourceLang">Bahasa sumber</label>
+              <select id="sourceLang" class="field-input">
+                <option value="EN">Inggris</option>
+                <option value="JA">Jepang (estafet via Inggris)</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label" for="maxChars">Karakter / baris</label>
+              <input type="number" id="maxChars" class="field-input" value="74" min="20" max="200">
+            </div>
+          </div>
+
+          <p class="field-hint">Nilai ini otomatis dipakai sebagai default tiap buka menu Translate.</p>
+        </div>
+
+        <div class="card card-wide">
+          <h2 class="card-title">Pemakaian sesi ini</h2>
+          <div class="usage-grid">
+            <div class="usage-stat">
+              <div class="usage-stat-label">Karakter DeepL terpakai</div>
+              <div class="usage-stat-value" id="usageDeeplUsed">&mdash;</div>
+              <div class="usage-stat-sub" id="usageDeeplLimit"></div>
+            </div>
+            <div class="usage-stat">
+              <div class="usage-stat-label">Token OpenAI-compatible (sesi ini)</div>
+              <div class="usage-stat-value" id="usageTokens">0</div>
+              <div class="usage-stat-sub">reset tiap reload halaman</div>
+            </div>
+            <div class="usage-stat">
+              <div class="usage-stat-label">Google Translate</div>
+              <div class="usage-stat-value">&mdash;</div>
+              <div class="usage-stat-sub">tanpa API key, tidak ada data kuota</div>
+            </div>
+          </div>
+          <p class="field-hint">Klik <strong>Cek kuota</strong> di atas untuk mengambil angka DeepL terbaru langsung dari akunmu. Token OpenAI-compatible terakumulasi otomatis setiap proses translate berjalan di menu Translate.</p>
+        </div>
+
       </div>
-      <div class="field-group">
-        <label class="field-label" for="maxChars">Karakter / baris</label>
-        <input type="number" id="maxChars" class="field-input" value="74" min="20" max="200">
+    </section>
+
+    <!-- ============ TRANSLATE ============ -->
+    <section class="view" id="view-translate" data-view-panel="translate" hidden>
+      <header class="view-header">
+        <h1 class="view-title">Translate</h1>
+        <p class="view-subtitle">Pilih folder game dari <code>games/</code> lalu jalankan penerjemahan.</p>
+      </header>
+
+      <div class="view-body layout-split">
+
+        <section class="panel panel-config">
+          <div class="field-group">
+            <label class="field-label" for="folderSelect">Folder game (di dalam games/)</label>
+            <select id="folderSelect" class="field-input"></select>
+            <button class="btn btn-secondary" id="inspectBtn" type="button">Baca folder</button>
+            <p class="field-hint" id="inspectResult"></p>
+          </div>
+
+          <div class="field-group">
+            <span class="field-label">Engine terdeteksi</span>
+            <div class="pill" id="engineLabel">&mdash;</div>
+          </div>
+
+          <div class="field-group">
+            <span class="field-label">Provider aktif</span>
+            <div class="pill" id="translateProviderPill">&mdash;</div>
+            <p class="field-hint">Diatur dari menu Dashboard.</p>
+          </div>
+
+          <div class="field-actions field-actions-main">
+            <button class="btn btn-primary" id="startBtn" type="button" disabled>Mulai terjemahkan</button>
+            <button class="btn btn-danger" id="cancelBtn" type="button" hidden>Batalkan</button>
+          </div>
+        </section>
+
+        <section class="panel panel-log">
+          <div class="log-header">
+            <div class="log-header-stats">
+              <span id="progressLabel">Menunggu proses dimulai&hellip;</span>
+            </div>
+            <div class="log-progress-track">
+              <div class="log-progress-fill" id="progressFill"></div>
+            </div>
+          </div>
+          <div class="log-stream" id="logStream"></div>
+        </section>
+
       </div>
-    </div>
+    </section>
 
-    <div class="field-group">
-      <label class="field-label" for="providerSelect">Penyedia terjemahan</label>
-      <select id="providerSelect" class="field-input"></select>
-    </div>
+    <!-- ============ MANUAL REVISI ============ -->
+    <section class="view" id="view-revision" data-view-panel="revision" hidden>
+      <header class="view-header">
+        <h1 class="view-title">Manual Revisi</h1>
+        <p class="view-subtitle">Perbaiki hasil terjemahan yang kaku atau salah, per baris, langsung ke file hasil.</p>
+      </header>
 
-    <div class="field-group" id="apiKeyGroup">
-      <label class="field-label" for="apiKey">API key</label>
-      <input type="password" id="apiKey" class="field-input" placeholder="Kunci API kamu sendiri">
-    </div>
+      <div class="view-body layout-split">
 
-    <div class="field-group" id="baseUrlGroup" hidden>
-      <label class="field-label" for="baseUrl">Base URL</label>
-      <input type="text" id="baseUrl" class="field-input" placeholder="https://api.openai.com/v1">
-    </div>
+        <section class="panel panel-config">
+          <div class="field-group">
+            <label class="field-label" for="revisionFolderSelect">Folder hasil terjemahan</label>
+            <select id="revisionFolderSelect" class="field-input"></select>
+          </div>
 
-    <div class="field-group" id="modelGroup" hidden>
-      <label class="field-label" for="modelName">Model</label>
-      <input type="text" id="modelName" class="field-input" placeholder="gpt-4o-mini">
-    </div>
+          <div class="field-group">
+            <label class="field-label" for="revisionFileSelect">File</label>
+            <select id="revisionFileSelect" class="field-input" disabled></select>
+          </div>
 
-    <div class="field-actions">
-      <button class="btn btn-ghost" id="verifyBtn" type="button">Tes koneksi</button>
-      <span class="verify-result" id="verifyResult"></span>
-    </div>
+          <p class="field-hint" id="revisionStatus"></p>
+        </section>
 
-    <div class="field-actions field-actions-main">
-      <button class="btn btn-primary" id="startBtn" type="button" disabled>Mulai terjemahkan</button>
-      <button class="btn btn-danger" id="cancelBtn" type="button" hidden>Batalkan</button>
-    </div>
+        <section class="panel panel-revision">
+          <div class="revision-toolbar">
+            <input type="text" id="revisionFilter" class="field-input" placeholder="Cari teks...">
+            <button class="btn btn-primary" id="revisionSaveBtn" type="button" disabled>Simpan perubahan</button>
+          </div>
+          <div class="revision-list" id="revisionList">
+            <p class="log-empty">Pilih folder dan file di sebelah kiri untuk mulai merevisi.</p>
+          </div>
+        </section>
 
-  </section>
-
-  <section class="panel panel-log" aria-label="Log proses">
-    <div class="log-header">
-      <div class="log-header-stats">
-        <span id="progressLabel">Menunggu proses dimulai&hellip;</span>
       </div>
-      <div class="log-progress-track">
-        <div class="log-progress-fill" id="progressFill"></div>
-      </div>
-    </div>
-    <div class="log-stream" id="logStream"></div>
-  </section>
+    </section>
 
-</main>
+  </main>
+</div>
 
+<script src="/js/storage.js"></script>
+<script src="/js/dashboard.js"></script>
+<script src="/js/translate.js"></script>
+<script src="/js/revision.js"></script>
 <script src="/js/app.js"></script>
 </body>
 </html>
