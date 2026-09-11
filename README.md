@@ -4,7 +4,7 @@ Alat lokal untuk menerjemahkan teks dalam game buatan RPG Maker MV/MZ ke Bahasa 
 
 ## Kenapa alat ini ada
 
-Script auto-translate untuk RPG Maker biasanya berupa satu file CLI yang cuma jalan di terminal, tanpa progress yang jelas, dan API key sering nempel di kode. Alat ini membungkus logika yang sama jadi antarmuka web lokal: kamu lihat progress-nya, pilih provider terjemahan sendiri, dan API key tidak pernah ikut ter-commit ke mana-mana.
+Script auto-translate untuk RPG Maker biasanya berupa satu file CLI yang cuma jalan di terminal, tanpa progress yang jelas, dan API key sering nempel di kode. Alat ini membungkus logika yang sama jadi dashboard web lokal: kamu lihat progress-nya, pilih provider terjemahan sendiri, dan bisa merevisi hasil terjemahan yang kaku tanpa buka text editor manual.
 
 ## Menjalankan
 
@@ -12,7 +12,6 @@ Butuh [Node.js](https://nodejs.org) versi 18 ke atas.
 
 ```bash
 npm install
-cp config.example.js config.js   # opsional — isi API key default di sini
 npm start
 ```
 
@@ -22,43 +21,52 @@ Panduan lebih lengkap ada di [`docs/installation.md`](./docs/installation.md).
 
 ## Cara pakai
 
-1. Taruh project game kamu (folder yang berisi `data/` atau `www/data/`) ke dalam folder `games/`.
-2. Pilih foldernya dari dropdown di web, klik **Baca folder**.
-3. Pilih penyedia terjemahan. Kalau `config.js` sudah diisi, API key otomatis terisi — kalau belum, isi manual lalu klik **Tes koneksi**.
-4. Klik **Mulai terjemahkan**. Progress per file dan per baris teks muncul langsung di panel log.
-5. Hasil terjemahan disimpan sebagai folder baru bernama `<folder-asli>_indo` di dalam `games/`, sejajar dengan folder aslinya. Folder asli tidak pernah diubah.
+Aplikasi punya tiga menu di sidebar:
+
+**Dashboard** — atur provider terjemahan, API key, bahasa sumber default, dan lihat pemakaian kuota. Semua pengaturan ini disimpan di **localStorage browser kamu**, bukan di server atau file — jadi tidak pernah ke-commit ke git secara tidak sengaja, tapi juga berarti tidak ikut pindah kalau ganti browser/device.
+
+**Translate** — taruh project game kamu (folder yang berisi `data/` atau `www/data/`) ke dalam folder `games/`, pilih dari dropdown, klik **Baca folder**, lalu **Mulai terjemahkan**. Progress per file dan per baris teks muncul real-time. Hasil disimpan sebagai folder baru `<folder-asli>_indo` di dalam `games/`, sejajar dengan folder aslinya — folder asli tidak pernah diubah.
+
+**Manual Revisi** — mesin terjemahan (apalagi yang murah/gratis) sering menghasilkan teks yang kaku, baku, atau salah konteks untuk dialog game. Menu ini membaca file hasil terjemahan di `<folder>_indo/`, menampilkan tiap baris teks sebagai kotak yang bisa diedit langsung, dan menyimpannya balik ke file JSON aslinya begitu kamu klik **Simpan perubahan**.
 
 Web ini hanya bisa membaca folder yang ada di dalam `games/` — tidak ada input path bebas, jadi tidak akan mengakses bagian lain dari komputer kamu.
 
 ## Provider yang didukung
 
-- **DeepL** — butuh API key dari [deepl.com](https://www.deepl.com/pro-api), tier gratis tersedia.
-- **Google Translate** — tanpa API key, memakai endpoint publik, cocok untuk uji coba cepat.
-- **OpenAI-compatible** — untuk OpenAI, OpenRouter, atau server lokal seperti LM Studio/Ollama yang punya endpoint `/chat/completions`. Isi base URL dan nama model sendiri.
+- **DeepL** — butuh API key dari [deepl.com](https://www.deepl.com/pro-api), tier gratis tersedia. Dashboard bisa menampilkan karakter terpakai dan limit bulanan langsung dari akun DeepL kamu (tombol **Cek kuota**).
+- **Google Translate** — tanpa API key, memakai endpoint publik, cocok untuk uji coba cepat. Tidak ada data kuota karena tidak ada akun/API key yang terhubung.
+- **OpenAI-compatible** — untuk OpenAI, OpenRouter, atau server lokal seperti LM Studio/Ollama yang punya endpoint `/chat/completions`. Isi base URL dan nama model sendiri. Dashboard mengakumulasi jumlah token yang terpakai selama sesi translate berjalan (reset tiap reload halaman) — provider ini tidak punya endpoint standar untuk cek sisa saldo, jadi angka yang ditampilkan murni token terpakai, bukan sisa kuota.
 
-Untuk teks berbahasa Jepang, aktifkan opsi estafet: game diterjemahkan JA → EN → ID karena kualitasnya umumnya lebih stabil dibanding JA → ID langsung.
+Untuk teks berbahasa Jepang, aktifkan opsi estafet di Dashboard: game diterjemahkan JA → EN → ID karena kualitasnya umumnya lebih stabil dibanding JA → ID langsung.
 
 ## Struktur proyek
 
 ```
 server/
-  core/           orkestrasi translate, cache, job runner, config, scoping folder games/
+  core/           orkestrasi translate, cache, job runner, scoping folder games/, editor revisi
   engines/        logika khusus per game engine (rpgmaker/ saat ini)
   providers/      integrasi tiap penyedia terjemahan
   routes.js       endpoint API
   index.js        entry point server
-public/           antarmuka web (HTML/CSS/JS polos, tanpa build step)
+public/
+  js/
+    storage.js    wrapper localStorage untuk pengaturan
+    dashboard.js  logika menu Dashboard
+    translate.js  logika menu Translate
+    revision.js   logika menu Manual Revisi
+    app.js        router antar menu
 docs/             panduan instalasi dan kontribusi
 games/            taruh project game di sini (di-gitignore, tidak ikut ter-commit)
-config.example.js template konfigurasi — salin jadi config.js untuk API key default
 ```
 
 Panduan menambah engine atau provider baru ada di [`docs/contributor.md`](./docs/contributor.md).
 
 ## Batasan yang perlu diketahui
 
+- API key disimpan di localStorage browser — kalau kamu pakai browser lain atau clear data browser, perlu isi ulang. Ini pilihan desain sengaja: tidak ada file config yang bisa ke-commit berisi key secara tidak sengaja.
 - Cache terjemahan disimpan per kombinasi engine/bahasa/provider di `.cache/`, biar menjalankan ulang tidak menerjemahkan ulang teks yang sama.
 - Placeholder escape code RPG Maker (`\C[1]`, `\N[1]`, dan sejenisnya) dilindungi otomatis sebelum dikirim ke provider, lalu dikembalikan setelah hasil terjemahan diterima.
+- Manual Revisi membaca dan menulis langsung ke file di folder `_indo/` — tidak ada undo di dalam aplikasi, jadi kalau mau aman, backup folder itu sebelum revisi besar-besaran.
 - Alat ini tidak memvalidasi lisensi RTP/asset game. Tanggung jawab penuh soal legalitas mendistribusikan hasil terjemahan ada di tangan penggunanya.
 
 ## Lisensi
