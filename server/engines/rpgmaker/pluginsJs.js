@@ -36,4 +36,3 @@ async function translatePluginsJs(sourceCode, translateOne) {
 }
 
 module.exports = { translatePluginsJs };
-          
