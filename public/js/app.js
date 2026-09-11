@@ -4,7 +4,7 @@ const state = {
 };
 
 const el = {
-  folderPath: document.getElementById('folderPath'),
+  folderSelect: document.getElementById('folderSelect'),
   inspectBtn: document.getElementById('inspectBtn'),
   inspectResult: document.getElementById('inspectResult'),
   engineLabel: document.getElementById('engineLabel'),
@@ -53,6 +53,46 @@ function escapeHtml(text) {
   return text.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 }
 
+async function loadGameFolders() {
+  const response = await fetch('/api/games');
+  const payload = await response.json();
+
+  if (payload.folders.length === 0) {
+    el.folderSelect.innerHTML = '<option value="">(kosong — taruh project di folder games/)</option>';
+    el.inspectBtn.disabled = true;
+    return;
+  }
+
+  el.folderSelect.innerHTML = payload.folders
+    .map((name) => `<option value="${name}">${name}</option>`)
+    .join('');
+  el.inspectBtn.disabled = false;
+}
+
+async function loadDefaultsFromConfig() {
+  const response = await fetch('/api/config');
+  const config = await response.json();
+
+  el.sourceLang.value = config.translation.sourceLang || 'EN';
+  el.maxChars.value = config.translation.maxCharsPerLine || 74;
+
+  if (config.defaultProvider) {
+    el.providerSelect.value = config.defaultProvider;
+    updateProviderFields();
+  }
+
+  const providerDefaults = config.providers[el.providerSelect.value];
+  if (providerDefaults) {
+    if (providerDefaults.apiKey) el.apiKey.value = providerDefaults.apiKey;
+    if (providerDefaults.baseUrl) el.baseUrl.value = providerDefaults.baseUrl;
+    if (providerDefaults.model) el.modelName.value = providerDefaults.model;
+  }
+
+  if (config.usingExampleConfig) {
+    appendLog('file', 'config', 'Memakai config.example.js — salin jadi config.js untuk menyimpan API key default kamu.');
+  }
+}
+
 async function loadProviders() {
   const response = await fetch('/api/providers');
   state.providers = await response.json();
@@ -84,8 +124,8 @@ function currentProviderConfig() {
 }
 
 async function inspectFolder() {
-  const folderPath = el.folderPath.value.trim();
-  if (!folderPath) return;
+  const folderName = el.folderSelect.value;
+  if (!folderName) return;
 
   el.inspectResult.textContent = 'Membaca folder...';
   el.startBtn.disabled = true;
@@ -97,7 +137,7 @@ async function inspectFolder() {
     const response = await fetch('/api/project/inspect', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ folderPath }),
+      body: JSON.stringify({ folderName }),
     });
     const payload = await response.json();
 
@@ -148,7 +188,7 @@ function setRunningUI(isRunning) {
   el.startBtn.hidden = isRunning;
   el.cancelBtn.hidden = !isRunning;
   el.inspectBtn.disabled = isRunning;
-  el.folderPath.disabled = isRunning;
+  el.folderSelect.disabled = isRunning;
 }
 
 function updateProgress() {
@@ -170,7 +210,7 @@ async function startTranslation() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      folderPath: el.folderPath.value.trim(),
+      folderName: el.folderSelect.value,
       engineId: state.engineId,
       providerId: el.providerSelect.value,
       providerConfig: currentProviderConfig(),
@@ -252,5 +292,8 @@ el.startBtn.addEventListener('click', startTranslation);
 el.cancelBtn.addEventListener('click', cancelTranslation);
 el.providerSelect.addEventListener('change', updateProviderFields);
 
-loadProviders();
-  
+(async () => {
+  await loadProviders();
+  await loadDefaultsFromConfig();
+  await loadGameFolders();
+})();
