@@ -12,17 +12,23 @@ Butuh [Node.js](https://nodejs.org) versi 18 ke atas.
 
 ```bash
 npm install
+cp config.example.js config.js   # opsional — isi API key default di sini
 npm start
 ```
 
 Buka `http://localhost:4173` di browser.
 
+Panduan lebih lengkap ada di [`docs/installation.md`](./docs/installation.md).
+
 ## Cara pakai
 
-1. Isi path folder project game kamu (folder yang berisi `data/` atau `www/data/`), lalu klik **Baca folder**.
-2. Pilih penyedia terjemahan dan isi API key milikmu sendiri (klik **Tes koneksi** untuk memastikan key valid).
-3. Klik **Mulai terjemahkan**. Progress per file dan per baris teks muncul langsung di panel log.
-4. Hasil terjemahan disimpan sebagai folder baru bernama `<folder-asli>_indo`, sejajar dengan folder aslinya. Folder asli tidak pernah diubah.
+1. Taruh project game kamu (folder yang berisi `data/` atau `www/data/`) ke dalam folder `games/`.
+2. Pilih foldernya dari dropdown di web, klik **Baca folder**.
+3. Pilih penyedia terjemahan. Kalau `config.js` sudah diisi, API key otomatis terisi — kalau belum, isi manual lalu klik **Tes koneksi**.
+4. Klik **Mulai terjemahkan**. Progress per file dan per baris teks muncul langsung di panel log.
+5. Hasil terjemahan disimpan sebagai folder baru bernama `<folder-asli>_indo` di dalam `games/`, sejajar dengan folder aslinya. Folder asli tidak pernah diubah.
+
+Web ini hanya bisa membaca folder yang ada di dalam `games/` — tidak ada input path bebas, jadi tidak akan mengakses bagian lain dari komputer kamu.
 
 ## Provider yang didukung
 
@@ -32,21 +38,22 @@ Buka `http://localhost:4173` di browser.
 
 Untuk teks berbahasa Jepang, aktifkan opsi estafet: game diterjemahkan JA → EN → ID karena kualitasnya umumnya lebih stabil dibanding JA → ID langsung.
 
-## Menambah engine game lain
-
-Engine didefinisikan di `server/engines/`. Setiap engine adalah modul dengan empat bagian: `detect(folderPath)` untuk mengenali jenis project, `listSourceFiles(folderPath)` untuk daftar file yang perlu diproses, dan `translateFile(file, translateOne, options)` untuk menerjemahkan satu file. Daftarkan engine baru di `server/engines/registry.js`. Dukungan Ren'Py dan engine lain direncanakan mengikuti pola yang sama.
-
 ## Struktur proyek
 
 ```
 server/
-  core/           orkestrasi translate, cache, job runner
+  core/           orkestrasi translate, cache, job runner, config, scoping folder games/
   engines/        logika khusus per game engine (rpgmaker/ saat ini)
   providers/      integrasi tiap penyedia terjemahan
   routes.js       endpoint API
   index.js        entry point server
 public/           antarmuka web (HTML/CSS/JS polos, tanpa build step)
+docs/             panduan instalasi dan kontribusi
+games/            taruh project game di sini (di-gitignore, tidak ikut ter-commit)
+config.example.js template konfigurasi — salin jadi config.js untuk API key default
 ```
+
+Panduan menambah engine atau provider baru ada di [`docs/contributor.md`](./docs/contributor.md).
 
 ## Batasan yang perlu diketahui
 
