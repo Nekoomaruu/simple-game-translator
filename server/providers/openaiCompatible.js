@@ -11,6 +11,11 @@ function buildPrompt(text, sourceLang, targetLang) {
 }
 
 class OpenAICompatibleProvider extends TranslationProvider {
+  constructor(config) {
+    super(config);
+    this.lastUsage = null;
+  }
+
   async translate(text, sourceLang, targetLang) {
     const baseUrl = this.config.baseUrl.replace(/\/$/, '');
     const response = await fetch(`${baseUrl}/chat/completions`, {
@@ -34,6 +39,7 @@ class OpenAICompatibleProvider extends TranslationProvider {
     }
 
     const payload = await response.json();
+    if (payload.usage) this.lastUsage = payload.usage;
     return payload.choices[0].message.content.trim();
   }
 
@@ -44,4 +50,3 @@ class OpenAICompatibleProvider extends TranslationProvider {
 }
 
 module.exports = { OpenAICompatibleProvider };
-      
