@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simple Game Translator</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-mark">
+    <span class="topbar-mark-glyph">&gt;_</span>
+    <span class="topbar-mark-text">simple game translator</span>
+  </div>
+  <div class="topbar-status" id="serverStatus">lokal &middot; localhost</div>
+</header>
+
+<main class="layout">
+
+  <section class="panel panel-config" aria-label="Konfigurasi">
+
+    <div class="field-group">
+      <label class="field-label" for="folderPath">Folder project game</label>
+      <input type="text" id="folderPath" class="field-input" placeholder="/home/user/game/data atau folder induknya">
+      <button class="btn btn-secondary" id="inspectBtn" type="button">Baca folder</button>
+      <p class="field-hint" id="inspectResult"></p>
+    </div>
+
+    <div class="field-group">
+      <span class="field-label">Engine terdeteksi</span>
+      <div class="pill" id="engineLabel">&mdash;</div>
+    </div>
+
+    <div class="field-row">
+      <div class="field-group">
+        <label class="field-label" for="sourceLang">Bahasa sumber</label>
+        <select id="sourceLang" class="field-input">
+          <option value="EN">Inggris</option>
+          <option value="JA">Jepang (estafet via Inggris)</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="maxChars">Karakter / baris</label>
+        <input type="number" id="maxChars" class="field-input" value="74" min="20" max="200">
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label" for="providerSelect">Penyedia terjemahan</label>
+      <select id="providerSelect" class="field-input"></select>
+    </div>
+
+    <div class="field-group" id="apiKeyGroup">
+      <label class="field-label" for="apiKey">API key</label>
+      <input type="password" id="apiKey" class="field-input" placeholder="Kunci API kamu sendiri">
+    </div>
+
+    <div class="field-group" id="baseUrlGroup" hidden>
+      <label class="field-label" for="baseUrl">Base URL</label>
+      <input type="text" id="baseUrl" class="field-input" placeholder="https://api.openai.com/v1">
+    </div>
+
+    <div class="field-group" id="modelGroup" hidden>
+      <label class="field-label" for="modelName">Model</label>
+      <input type="text" id="modelName" class="field-input" placeholder="gpt-4o-mini">
+    </div>
+
+    <div class="field-actions">
+      <button class="btn btn-ghost" id="verifyBtn" type="button">Tes koneksi</button>
+      <span class="verify-result" id="verifyResult"></span>
+    </div>
+
+    <div class="field-actions field-actions-main">
+      <button class="btn btn-primary" id="startBtn" type="button" disabled>Mulai terjemahkan</button>
+      <button class="btn btn-danger" id="cancelBtn" type="button" hidden>Batalkan</button>
+    </div>
+
+  </section>
+
+  <section class="panel panel-log" aria-label="Log proses">
+    <div class="log-header">
+      <div class="log-header-stats">
+        <span id="progressLabel">Menunggu proses dimulai&hellip;</span>
+      </div>
+      <div class="log-progress-track">
+        <div class="log-progress-fill" id="progressFill"></div>
+      </div>
+    </div>
+    <div class="log-stream" id="logStream"></div>
+  </section>
+
+</main>
+
+<script src="/js/app.js"></script>
+</body>
+</html>
+  
