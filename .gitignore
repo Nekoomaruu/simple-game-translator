@@ -4,3 +4,6 @@ node_modules/
 *_indo_*/
 .DS_Store
 npm-debug.log
+config.js
+games/*
+!games/.gitkeep
