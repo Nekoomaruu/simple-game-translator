@@ -1,0 +1,18 @@
+{
+  "name": "simple-game-translator",
+  "version": "1.0.0",
+  "description": "Local web app for translating RPG Maker and other game engine text files, with pluggable translation providers.",
+  "license": "MIT",
+  "type": "commonjs",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
