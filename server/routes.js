@@ -5,7 +5,7 @@ const { listProviders, createProvider } = require('./providers/registry');
 const { TranslationCache } = require('./core/translationCache');
 const { TranslationJob } = require('./core/translationJob');
 const { GAMES_ROOT, listGameFolders, resolveGamePath, ensureGamesRootExists } = require('./core/gamesRoot');
-const { listTranslatedFolders, listJsonFilesRecursive, resolveTranslatedFile } = require('./core/revisionBrowser');
+const { listTranslatedFolders, listRevisableFilesRecursive, resolveTranslatedFile } = require('./core/revisionBrowser');
 const { extractTextEntries, applyTextEdits } = require('./core/revisionEditor');
 
 const activeJobs = new Map();
@@ -26,7 +26,7 @@ function registerRoutes(app) {
   });
 
   app.post('/api/project/inspect', (req, res) => {
-    const { folderName } = req.body;
+    const { folderName, languageFolder } = req.body;
     let folderPath;
     try {
       folderPath = resolveGamePath(folderName);
@@ -43,12 +43,18 @@ function registerRoutes(app) {
       return res.status(422).json({ error: 'Tidak ada engine yang cocok dengan folder ini.' });
     }
 
-    const files = engine.listSourceFiles(folderPath);
+    const availableLanguages = engine.listAvailableLanguages
+      ? engine.listAvailableLanguages(folderPath)
+      : [];
+
+    const files = engine.listSourceFiles(folderPath, { languageFolder });
     res.json({
       engineId: engine.id,
       engineLabel: engine.label,
       fileCount: files.length,
-      files: files.map((f) => f.relativePath)
+      files: files.map((f) => f.relativePath),
+      availableLanguages,
+      selectedLanguage: languageFolder || availableLanguages[0] || null
     });
   });
 
@@ -83,7 +89,8 @@ function registerRoutes(app) {
       sourceLang,
       targetLang,
       relayThroughEnglish,
-      maxCharsPerLine
+      maxCharsPerLine,
+      languageFolder
     } = req.body;
 
     let folderPath;
@@ -128,6 +135,7 @@ function registerRoutes(app) {
       targetLang: targetLang || 'ID',
       relayThroughEnglish: Boolean(relayThroughEnglish),
       maxCharsPerLine: maxCharsPerLine || 74,
+      languageFolder,
       cache
     });
 
@@ -206,7 +214,7 @@ function registerRoutes(app) {
       return res.status(404).json({ error: 'Folder tidak ditemukan.' });
     }
 
-    res.json({ files: listJsonFilesRecursive(folderPath) });
+    res.json({ files: listRevisableFilesRecursive(folderPath) });
   });
 
   app.get('/api/revision/entries', (req, res) => {
