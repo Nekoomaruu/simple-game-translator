@@ -1,6 +1,6 @@
 # Simple Game Translator
 
-Alat lokal untuk menerjemahkan teks dalam game buatan RPG Maker MV/MZ ke Bahasa Indonesia, langsung dari browser, tanpa upload file ke server manapun. Semua pembacaan dan penulisan file terjadi di komputer kamu sendiri.
+Alat lokal untuk menerjemahkan teks dalam game RPG Maker MV/MZ dan Ren'Py ke Bahasa Indonesia, langsung dari browser, tanpa upload file ke server manapun. Semua pembacaan dan penulisan file terjadi di komputer kamu sendiri.
 
 ## Kenapa alat ini ada
 
@@ -27,7 +27,7 @@ Aplikasi punya tiga menu di sidebar:
 
 **Translate** — taruh project game kamu (folder yang berisi `data/` atau `www/data/`) ke dalam folder `games/`, pilih dari dropdown, klik **Baca folder**, lalu **Mulai terjemahkan**. Progress per file dan per baris teks muncul real-time. Hasil disimpan sebagai folder baru `<folder-asli>_indo` di dalam `games/`, sejajar dengan folder aslinya — folder asli tidak pernah diubah.
 
-**Manual Revisi** — mesin terjemahan (apalagi yang murah/gratis) sering menghasilkan teks yang kaku, baku, atau salah konteks untuk dialog game. Menu ini membaca file hasil terjemahan di `<folder>_indo/`, menampilkan tiap baris teks sebagai kotak yang bisa diedit langsung, dan menyimpannya balik ke file JSON aslinya begitu kamu klik **Simpan perubahan**.
+**Manual Revisi** — mesin terjemahan (apalagi yang murah/gratis) sering menghasilkan teks yang kaku, baku, atau salah konteks untuk dialog game. Menu ini membaca file hasil terjemahan di `<folder>_indo/` (JSON untuk RPG Maker, `.rpy` untuk Ren'Py), menampilkan tiap baris teks sebagai kotak yang bisa diedit langsung, dan menyimpannya balik ke file aslinya begitu kamu klik **Simpan perubahan** — nama karakter dan elemen `{tag}`/`[variabel]` di file Ren'Py tidak ikut ditampilkan untuk diedit, hanya teks dialognya.
 
 Web ini hanya bisa membaca folder yang ada di dalam `games/` — tidak ada input path bebas, jadi tidak akan mengakses bagian lain dari komputer kamu.
 
@@ -39,12 +39,17 @@ Web ini hanya bisa membaca folder yang ada di dalam `games/` — tidak ada input
 
 Untuk teks berbahasa Jepang, aktifkan opsi estafet di Dashboard: game diterjemahkan JA → EN → ID karena kualitasnya umumnya lebih stabil dibanding JA → ID langsung.
 
+## Engine game yang didukung
+
+- **RPG Maker MV/MZ** — folder `data/*.json` (dan `www/data/*.json` kalau ada dua-duanya), plus `plugins.js`.
+- **Ren'Py** — file `.rpy` di folder `game/tl/indonesian/`. Folder ini **harus digenerate dulu lewat Ren'Py Launcher** (menu "Generate Translations") sebelum dipakai di sini — Simple Game Translator mengisi baris terjemahan di dalamnya, bukan membuat strukturnya dari nol. Nama karakter di depan dialog (`e "..."`) dan elemen `{tag}`/`[variabel]` dilindungi otomatis, tidak ikut diterjemahkan atau berubah posisi. Baris dengan lebih dari satu string per baris dan blok `menu:` (pilihan) belum ditangani di versi ini.
+
 ## Struktur proyek
 
 ```
 server/
   core/           orkestrasi translate, cache, job runner, scoping folder games/, editor revisi
-  engines/        logika khusus per game engine (rpgmaker/ saat ini)
+  engines/        logika khusus per game engine (rpgmaker/ dan renpy/ saat ini)
   providers/      integrasi tiap penyedia terjemahan
   routes.js       endpoint API
   index.js        entry point server
