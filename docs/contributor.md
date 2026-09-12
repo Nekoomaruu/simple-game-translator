@@ -19,6 +19,7 @@ server/
   engines/        logika khusus per game engine
     registry.js   daftar semua engine yang aktif
     rpgmaker/     implementasi untuk RPG Maker MV/MZ
+    renpy/        implementasi untuk Ren'Py
   providers/      integrasi tiap penyedia terjemahan
     registry.js   daftar semua provider yang aktif
   routes.js       seluruh endpoint API
@@ -59,13 +60,13 @@ module.exports = {
 };
 ```
 
-`translateOne` adalah fungsi yang disuntikkan oleh job runner — sudah menangani cache, retry, dan proteksi placeholder secara umum. Engine baru cukup fokus pada: bagian mana dari file yang merupakan teks yang layak diterjemahkan, dan bagian mana yang harus dilewati (kode, ID, nama file aset, dll).
+`translateOne` adalah fungsi yang disuntikkan oleh job runner — sudah menangani cache, retry, dan proteksi placeholder secara umum lewat `translateString.js`. Proteksi yang spesifik ke sintaks satu engine (misalnya escape code RPG Maker atau text tag Ren'Py) tetap jadi tanggung jawab modul engine itu sendiri — lihat `engines/rpgmaker/escapeCodes.js` dan `engines/renpy/tokenProtection.js` sebagai referensi pola yang dipakai (protect sebelum translate, restore sesudahnya, pakai placeholder ASCII yang tidak mungkin ikut diterjemahkan).
 
-Setelah modul engine siap, daftarkan di `server/engines/registry.js`:
+Setelah modul engine siap, daftarkan di `server/engines/registry.js` — ini juga contoh nyata yang sudah berjalan di repo:
 
 ```js
 const rpgMakerEngine = require('./rpgmaker');
-const renpyEngine = require('./renpy'); // engine baru
+const renpyEngine = require('./renpy');
 
 const ENGINES = [rpgMakerEngine, renpyEngine];
 ```
