@@ -9,16 +9,21 @@ function listTranslatedFolders() {
     .sort();
 }
 
-function listJsonFilesRecursive(rootPath, currentPath = rootPath) {
+const REVISABLE_EXTENSIONS = new Set(['.json', '.rpy']);
+
+function listRevisableFilesRecursive(rootPath, currentPath = rootPath) {
   const results = [];
 
   for (const entry of fs.readdirSync(currentPath, { withFileTypes: true })) {
     const fullPath = path.join(currentPath, entry.name);
 
     if (entry.isDirectory()) {
-      results.push(...listJsonFilesRecursive(rootPath, fullPath));
-    } else if (entry.isFile() && entry.name.toLowerCase().endsWith('.json')) {
-      results.push(path.relative(rootPath, fullPath));
+      results.push(...listRevisableFilesRecursive(rootPath, fullPath));
+    } else if (entry.isFile()) {
+      const ext = path.extname(entry.name).toLowerCase();
+      if (REVISABLE_EXTENSIONS.has(ext)) {
+        results.push(path.relative(rootPath, fullPath));
+      }
     }
   }
 
@@ -37,5 +42,4 @@ function resolveTranslatedFile(folderName, relativeFilePath) {
   return filePath;
 }
 
-module.exports = { listTranslatedFolders, listJsonFilesRecursive, resolveTranslatedFile };
-    
+module.exports = { listTranslatedFolders, listRevisableFilesRecursive, resolveTranslatedFile };
