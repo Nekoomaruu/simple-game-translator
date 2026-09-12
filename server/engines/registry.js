@@ -1,6 +1,7 @@
 const rpgMakerEngine = require('./rpgmaker');
+const renpyEngine = require('./renpy');
 
-const ENGINES = [rpgMakerEngine];
+const ENGINES = [rpgMakerEngine, renpyEngine];
 
 function listEngines() {
   return ENGINES.map((engine) => ({ id: engine.id, label: engine.label }));
