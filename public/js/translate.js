@@ -11,6 +11,8 @@ const TranslatePage = (() => {
     el.inspectBtn = document.getElementById('inspectBtn');
     el.inspectResult = document.getElementById('inspectResult');
     el.engineLabel = document.getElementById('engineLabel');
+    el.languageFolderGroup = document.getElementById('languageFolderGroup');
+    el.languageFolderSelect = document.getElementById('languageFolderSelect');
     el.translateProviderPill = document.getElementById('translateProviderPill');
     el.startBtn = document.getElementById('startBtn');
     el.cancelBtn = document.getElementById('cancelBtn');
@@ -64,7 +66,7 @@ const TranslatePage = (() => {
     el.translateProviderPill.classList.toggle('pill-active', Boolean(info));
   }
 
-  async function inspectFolder() {
+  async function inspectFolder(preferredLanguageFolder) {
     const folderName = el.folderSelect.value;
     if (!folderName) return;
 
@@ -78,12 +80,13 @@ const TranslatePage = (() => {
       const response = await fetch('/api/project/inspect', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ folderName })
+        body: JSON.stringify({ folderName, languageFolder: preferredLanguageFolder || undefined })
       });
       const payload = await response.json();
 
       if (!response.ok) {
         el.inspectResult.textContent = payload.error || 'Gagal membaca folder.';
+        el.languageFolderGroup.hidden = true;
         return;
       }
 
@@ -92,6 +95,16 @@ const TranslatePage = (() => {
       el.engineLabel.classList.add('pill-active');
       el.inspectResult.textContent = `${payload.fileCount} file terdeteksi untuk diterjemahkan.`;
       el.startBtn.disabled = false;
+
+      if (payload.availableLanguages && payload.availableLanguages.length > 1) {
+        el.languageFolderGroup.hidden = false;
+        el.languageFolderSelect.innerHTML = payload.availableLanguages
+          .map((name) => `<option value="${name}">${name}</option>`)
+          .join('');
+        el.languageFolderSelect.value = payload.selectedLanguage;
+      } else {
+        el.languageFolderGroup.hidden = true;
+      }
     } catch (error) {
       el.inspectResult.textContent = `Gagal: ${error.message}`;
     }
@@ -102,6 +115,7 @@ const TranslatePage = (() => {
     el.cancelBtn.hidden = !isRunning;
     el.inspectBtn.disabled = isRunning;
     el.folderSelect.disabled = isRunning;
+    el.languageFolderSelect.disabled = isRunning;
   }
 
   function updateProgress() {
@@ -133,7 +147,8 @@ const TranslatePage = (() => {
         sourceLang: settings.sourceLang,
         targetLang: 'ID',
         relayThroughEnglish: settings.sourceLang === 'JA',
-        maxCharsPerLine: settings.maxCharsPerLine
+        maxCharsPerLine: settings.maxCharsPerLine,
+        languageFolder: el.languageFolderGroup.hidden ? undefined : el.languageFolderSelect.value
       })
     });
 
@@ -204,7 +219,8 @@ const TranslatePage = (() => {
   }
 
   function bindEvents() {
-    el.inspectBtn.addEventListener('click', inspectFolder);
+    el.inspectBtn.addEventListener('click', () => inspectFolder());
+    el.languageFolderSelect.addEventListener('change', () => inspectFolder(el.languageFolderSelect.value));
     el.startBtn.addEventListener('click', startTranslation);
     el.cancelBtn.addEventListener('click', cancelTranslation);
   }
@@ -221,4 +237,3 @@ const TranslatePage = (() => {
 
   return { init, onActivate };
 })();
-    
