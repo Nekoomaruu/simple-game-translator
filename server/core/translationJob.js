@@ -6,7 +6,7 @@ const { translateString } = require('./translateString');
 const CACHE_SAVE_INTERVAL = 40;
 
 class TranslationJob extends EventEmitter {
-  constructor({ engine, projectRoot, outputRoot, provider, sourceLang, targetLang, relayThroughEnglish, maxCharsPerLine, cache }) {
+  constructor({ engine, projectRoot, outputRoot, provider, sourceLang, targetLang, relayThroughEnglish, maxCharsPerLine, languageFolder, cache }) {
     super();
     this.engine = engine;
     this.projectRoot = projectRoot;
@@ -16,6 +16,7 @@ class TranslationJob extends EventEmitter {
     this.targetLang = targetLang;
     this.relayThroughEnglish = relayThroughEnglish;
     this.maxCharsPerLine = maxCharsPerLine;
+    this.languageFolder = languageFolder;
     this.cache = cache;
     this.cancelled = false;
     this.translatedCount = 0;
@@ -26,7 +27,7 @@ class TranslationJob extends EventEmitter {
   }
 
   async run() {
-    const files = this.engine.listSourceFiles(this.projectRoot);
+    const files = this.engine.listSourceFiles(this.projectRoot, { languageFolder: this.languageFolder });
     this.emit('start', { totalFiles: files.length });
 
     let processed = 0;
