@@ -22,13 +22,28 @@ const { translateRenpyFile } = require('./blockParser');
 // Lihat blockParser.js untuk parser blok translate dan penanganan baris
 // berkarakter, dan tokenProtection.js untuk proteksi {tag} dan [variabel].
 
-function findTlRoot(projectRoot) {
-  const candidates = [
-    path.join(projectRoot, 'game', 'tl'),
-    path.join(projectRoot, 'tl')
-  ];
+// Beberapa build Ren'Py (terutama hasil export dari Windows, yang tidak
+// case-sensitive terhadap nama folder) punya folder utama bernama "Game"
+// alih-alih "game". Linux/Termux itu case-sensitive, jadi pencarian harus
+// dilakukan tanpa peduli kapitalisasi, bukan hardcode satu ejaan.
+function findCaseInsensitiveDir(parentPath, targetName) {
+  if (!fs.existsSync(parentPath)) return null;
 
-  return candidates.find((candidate) => fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()) || null;
+  const targetLower = targetName.toLowerCase();
+  const match = fs.readdirSync(parentPath, { withFileTypes: true })
+    .find((entry) => entry.isDirectory() && entry.name.toLowerCase() === targetLower);
+
+  return match ? path.join(parentPath, match.name) : null;
+}
+
+function findTlRoot(projectRoot) {
+  const gameDir = findCaseInsensitiveDir(projectRoot, 'game');
+  if (gameDir) {
+    const tlInGameDir = findCaseInsensitiveDir(gameDir, 'tl');
+    if (tlInGameDir) return tlInGameDir;
+  }
+
+  return findCaseInsensitiveDir(projectRoot, 'tl');
 }
 
 function listAvailableLanguages(projectRoot) {
@@ -82,4 +97,3 @@ module.exports = {
   translateFile,
   listAvailableLanguages
 };
-
