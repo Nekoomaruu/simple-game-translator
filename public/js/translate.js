@@ -99,7 +99,10 @@ const TranslatePage = (() => {
       if (payload.availableLanguages && payload.availableLanguages.length > 1) {
         el.languageFolderGroup.hidden = false;
         el.languageFolderSelect.innerHTML = payload.availableLanguages
-          .map((name) => `<option value="${name}">${name}</option>`)
+          .map((name) => {
+            const label = name === 'None' ? 'None (bahasa utama/asli game, biasanya bukan ini)' : name;
+            return `<option value="${name}">${label}</option>`;
+          })
           .join('');
         el.languageFolderSelect.value = payload.selectedLanguage;
       } else {
